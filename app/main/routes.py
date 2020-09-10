@@ -15,10 +15,12 @@ from app.utility import has_extension
 #region Jinja Filters
 @bp.context_processor
 def inject_version():
+    """ Provide a version variable that can be used in templates for the footer. """
     return dict(version=current_app.config['APP_VERSION'])
 
 @bp.app_template_filter('asn1_to_datetime')
 def asn1_to_datetime(timestamp):
+    """ Convert the ASN1 time format to a regular timestamp with datetime. """
     if isinstance(timestamp, bytes):
         timestamp = timestamp.decode("UTF-8")
     else:
@@ -41,6 +43,7 @@ def index():
 @bp.route('/edit_profile', methods=['GET', 'POST'])
 @login_required
 def edit_profile():
+    """ Allow the user to change some basic information about their account. """
     form = EditProfileForm(current_user.email)
     if form.validate_on_submit():
         current_user.email = form.email.data
@@ -67,6 +70,7 @@ def edit_profile():
 @bp.route('/user')
 @login_required
 def user():
+    """ Display information saved about the current user. """
     return render_template('user.html', user=current_user)
 #endregion
 
@@ -74,12 +78,16 @@ def user():
 @bp.route('/root')
 @login_required
 def root_list():
+    """ Gathers and lists all root/CA certificates. """
     certs = RootCertificate.query.all()
     return render_template('root_list.html', certs=certs)
 
 @bp.route('/root/new', methods=['GET', 'POST'])
 @login_required
 def root_new():
+    """
+    This form takes input to create a new self-signed CA certificate.
+    """
     form = NewRootCertForm()
     if request.method == 'GET':
         form.country.data = current_user.country
@@ -128,6 +136,12 @@ def root_new():
 @bp.route('/root/<cert_id>')
 @login_required
 def root_view(cert_id):
+    """
+    This page displays a saved CA certificate.
+    The first time after the CA certificate is generated, it will have a fernet key,
+    used to decrypt it from the string in storage. This must be saved by the user
+    and is only available to them once.
+    """
     if session.get(f'fernet_root_{cert_id}'):
         fernet_key = session[f'fernet_root_{cert_id}']
         session[f'fernet_root_{cert_id}'] = None
@@ -140,6 +154,10 @@ def root_view(cert_id):
 
 @bp.route('/enroll/r/<cert_id>')
 def enroll_root(cert_id):
+    """
+    A public endpoint that provides the public key of an root CA
+    without the need for a user to authenticate themselves.
+    """
     cert = RootCertificate.query.filter_by(id=cert_id).first_or_404()
     cert_pubkey = cert.pubkey
     resp = Response(cert_pubkey, mimetype='application/pkix-cert')
@@ -151,12 +169,17 @@ def enroll_root(cert_id):
 @bp.route('/intermediate')
 @login_required
 def intermediate_list():
+    """ Gathers and lists all intermediate certificates. """
     certs = IntermediateCertificate.query.all()
     return render_template('intermediate_list.html', certs=certs)
 
 @bp.route('/intermediate/new', methods=['GET', 'POST'])
 @login_required
 def intermediate_new():
+    """
+    This form takes input to create a new certificate with a selected intermediate.
+    This also requires the encryption key that was generated when the CA was made.
+    """
     form = NewIntermediateCertForm()
     if request.method == 'GET':
         form.country.data = current_user.country
@@ -172,11 +195,11 @@ def intermediate_new():
         ca_key = crypto.load_privatekey(crypto.FILETYPE_PEM, ca_privkey)
         int_key = createKeyPair(TYPE_RSA, int(form.key_len.data))
         int_req = createCertRequest(int_key, CN=form.common_name.data, ST=form.state.data,
-                                   L=form.locality.data, O=form.organization.data,
-                                   OU=form.ou_name.data, emailAddress=form.email.data)
+                                    L=form.locality.data, O=form.organization.data,
+                                    OU=form.ou_name.data, emailAddress=form.email.data)
 
         int_cert = crypto.X509()
-        int_cert.set_serial_number(randint(50000000,100000000))
+        int_cert.set_serial_number(randint(50000000, 100000000))
         int_cert.set_version(2)
         int_cert.gmtime_adj_notBefore(0)
         int_cert.gmtime_adj_notAfter(60*60*24*365*int(form.cert_len.data))
@@ -217,6 +240,12 @@ def intermediate_new():
 @bp.route('/intermediate/<cert_id>')
 @login_required
 def intermediate_view(cert_id):
+    """
+    This page displays a saved intermediate.
+    The first time after the intermediate is generated, it will have a fernet key,
+    used to decrypt it from the string in storage. This must be saved by the user
+    and is only available to them once.
+    """
     if session.get(f'fernet_intermediate_{cert_id}'):
         fernet_key = session[f'fernet_intermediate_{cert_id}']
         session[f'fernet_intermediate_{cert_id}'] = None
@@ -228,18 +257,35 @@ def intermediate_view(cert_id):
     return render_template('intermediate_view.html', cert=cert, x509=cert_x509,
                            fernet_key=fernet_key)
 
+@bp.route('/enroll/i/<cert_id>')
+def enroll_intermediate(cert_id):
+    """
+    A public endpoint that provides the public key of an intermediate
+    without the need for a user to authenticate themselves.
+    """
+    cert = IntermediateCertificate.query.filter_by(id=cert_id).first_or_404()
+    cert_pubkey = cert.pubkey
+    resp = Response(cert_pubkey, mimetype='application/pkix-cert')
+    resp.headers['Content-Disposition'] = f'attachment;filename={cert.name}.cer'
+    return resp
+
 #endregion
 
 #region End User Certificates
 @bp.route('/certificate')
 @login_required
 def certificate_list():
+    """ Gathers and lists all end-user/application certificates. """
     certs = Certificate.query.all()
     return render_template('certificate_list.html', certs=certs)
 
 @bp.route('/certificate/new', methods=['GET', 'POST'])
 @login_required
 def certificate_new():
+    """
+    This form takes input to create a new certificate with a selected intermediate.
+    This also requires the encryption key that was generated when the intermediate was made.
+    """
     form = NewCertForm()
     if request.method == 'GET':
         form.country.data = current_user.country
@@ -255,11 +301,11 @@ def certificate_new():
         int_key = crypto.load_privatekey(crypto.FILETYPE_PEM, int_privkey)
         cert_key = createKeyPair(TYPE_RSA, int(form.key_len.data))
         cert_req = createCertRequest(cert_key, CN=form.common_name.data, ST=form.state.data,
-                                   L=form.locality.data, O=form.organization.data,
-                                   OU=form.ou_name.data, emailAddress=form.email.data)
+                                     L=form.locality.data, O=form.organization.data,
+                                     OU=form.ou_name.data, emailAddress=form.email.data)
 
         cert = crypto.X509()
-        cert.set_serial_number(randint(50000000,100000000))
+        cert.set_serial_number(randint(50000000, 100000000))
         cert.set_version(2)
         cert.gmtime_adj_notBefore(0)
         cert.gmtime_adj_notAfter(60*60*24*365*int(form.cert_len.data))
@@ -267,7 +313,8 @@ def certificate_new():
         cert.set_subject(cert_req.get_subject())
         cert.set_pubkey(cert_req.get_pubkey())
         cert.add_extensions([
-            crypto.X509Extension(b'authorityKeyIdentifier', False, b'keyid:always', issuer=int_cert),
+            crypto.X509Extension(b'authorityKeyIdentifier', False, b'keyid:always',
+                                 issuer=int_cert),
         ])
         cert.add_extensions([
             crypto.X509Extension(b'subjectKeyIdentifier', False, b'hash', subject=cert),
@@ -292,6 +339,12 @@ def certificate_new():
 @bp.route('/certificate/<cert_id>')
 @login_required
 def certificate_view(cert_id):
+    """
+    This page displays information about a certificate for end-users/applications.
+    If a private key for the cert ID is in the session, it will be displayed,
+    allowing the user to copy it before it is removed from the session,
+    as pypki will not store a private key unencrypted.
+    """
     if session.get(f'privkey_{cert_id}'):
         privkey = session[f'privkey_{cert_id}']
         session[f'privkey_{cert_id}'] = None
@@ -302,26 +355,22 @@ def certificate_view(cert_id):
     cert_x509 = crypto.load_certificate(crypto.FILETYPE_PEM, cert.pubkey)
     return render_template('certificate_view.html', cert=cert, x509=cert_x509, privkey=privkey)
 
-@bp.route('/enroll/i/<cert_id>')
-def enroll_intermediate(cert_id):
-    cert = IntermediateCertificate.query.filter_by(id=cert_id).first_or_404()
-    cert_pubkey = cert.pubkey
-    resp = Response(cert_pubkey, mimetype='application/pkix-cert')
-    resp.headers['Content-Disposition'] = f'attachment;filename={cert.name}.cer'
-    return resp
-
 #endregion
 
 #region Admin tools
 @bp.route('/admin/reset')
 @login_required
 def reset_certs():
+    """
+    This function will only work in debug mode.
+    It removes all certificates currently in the installation, allowing a clean experience.
+    """
     if not current_app.debug:
         flash("Cannot do this outside of debug mode.")
         return redirect(url_for('main.index'))
     else:
-        for c in [RootCertificate, IntermediateCertificate, Certificate]:
-            certs = c.query.all()
+        for cert in [RootCertificate, IntermediateCertificate, Certificate]:
+            certs = cert.query.all()
             for i in certs:
                 db.session.delete(i)
 

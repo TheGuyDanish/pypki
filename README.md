@@ -32,7 +32,7 @@ source pk_venv/bin/activate
 ```
 pip3 install -r requirements.txt
 ```
-4. Once the requirements are installed, check config.py and change the database connection parameters to match your environment (remember that SQLAlchemy supports a wide variety of database servers, not just MySQL.)
+4. Once the requirements are installed, copy config.example.py to config.py and change the database connection parameters to match your environment (remember that SQLAlchemy supports a wide variety of database servers, not just MySQL.)
 5. After changing your database connection parameters, update the database to the latest version.
 ```
 flask db upgrade

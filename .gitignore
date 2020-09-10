@@ -22,3 +22,4 @@ nosetests.xml
 *_venv
 logs
 .fernet.key
+config.py
