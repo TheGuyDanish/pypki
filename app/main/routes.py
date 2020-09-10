@@ -1,6 +1,6 @@
 """ The main logic and routes for servervault """
 from datetime import datetime
-from flask import render_template, flash, redirect, url_for, request, current_app, session
+from flask import render_template, flash, redirect, url_for, request, current_app, session, Response
 from flask_login import current_user, login_user, logout_user, login_required
 from OpenSSL import crypto
 from random import randint
@@ -109,6 +109,14 @@ def root_view(cert_id):
     cert = RootCertificate.query.filter_by(id=cert_id).first_or_404()
     cert_x509 = crypto.load_certificate(crypto.FILETYPE_PEM, cert.pubkey)
     return render_template('root_view.html', cert=cert, x509=cert_x509)
+
+@bp.route('/enroll/r/<cert_id>')
+def enroll_root(cert_id):
+    cert = RootCertificate.query.filter_by(id=cert_id).first_or_404()
+    cert_pubkey = cert.pubkey
+    resp = Response(cert_pubkey, mimetype='application/pkix-cert')
+    resp.headers['Content-Disposition'] = f'attachment;filename={cert.name}.cer'
+    return resp
 
 #endregion
 #region Intermediate Certificates
@@ -234,6 +242,15 @@ def certificate_view(cert_id, **extra):
     cert = Certificate.query.filter_by(id=cert_id).first_or_404()
     cert_x509 = crypto.load_certificate(crypto.FILETYPE_PEM, cert.pubkey)
     return render_template('certificate_view.html', cert=cert, x509=cert_x509, privkey=privkey)
+
+@bp.route('/enroll/i/<cert_id>')
+def enroll_intermediate(cert_id):
+    cert = IntermediateCertificate.query.filter_by(id=cert_id).first_or_404()
+    cert_pubkey = cert.pubkey
+    resp = Response(cert_pubkey, mimetype='application/pkix-cert')
+    resp.headers['Content-Disposition'] = f'attachment;filename={cert.name}.cer'
+    return resp
+
 #endregion
 
 #region Admin tools

@@ -7,11 +7,13 @@ from flask import Flask, request, current_app
 from flask_sqlalchemy import SQLAlchemy
 from flask_migrate import Migrate
 from flask_login import LoginManager
+from flask_cors import CORS
 from config import Config
 
 db = SQLAlchemy()
 migrate = Migrate()
 login = LoginManager()
+cors = CORS()
 login.login_view = 'auth.login'
 login.login_message = 'Please log in to acess this page.'
 
@@ -22,6 +24,7 @@ def create_app(config_class=Config):
     db.init_app(app)
     migrate.init_app(app, db)
     login.init_app(app)
+    cors.init_app(app, expose_headers=['Content-Disposition'])
 
     from app.errors import bp as errors_bp
     app.register_blueprint(errors_bp)
