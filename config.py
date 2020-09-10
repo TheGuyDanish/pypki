@@ -31,3 +31,4 @@ class Config(object):
     # DO NOT EDIT BELOW THIS LINE
     SQLALCHEMY_DATABASE_URI = f'mysql+pymysql://{DB_USER}:{DB_PASS}@{DB_HOST}:{DB_PORT}/{DB_NAME}'
     APP_VERSION = "INTERNAL_DEV_VERSION"
+    ASN1_TIME_FORMAT = '%Y%m%d%H%M%S%z'

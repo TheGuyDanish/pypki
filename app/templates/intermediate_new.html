@@ -1,83 +1,99 @@
 {% extends "base.html" %}
 
 {% block content %}
-    <h3>Create new Intermediate</h3>
-    <form action="" method="POST">
-        {{ form.hidden_tag() }}
-        <p>
-            {{ form.common_name.label }}<br />
-            {{ form.common_name(size=32) }}<br />
-            {% for error in form.common_name.errors %}
-            <span style="color: red;">[{{ error }}]</span>
-            {% endfor %}
-        </p>
-        <p>
-            {{ form.ca_cert.label }}<br />
-            {{ form.ca_cert }}<br />
-            {% for error in form.ca_cert.errors %}
-            <span style="color: red;">[{{ error }}]</span>
-            {% endfor %}
-        </p>
-        <p>
-            {{ form.email.label }}<br />
-            {{ form.email(size=64) }}<br />
-            {% for error in form.email.errors %}
-            <span style="color: red;">[{{ error }}]</span>
-            {% endfor %}
-        </p>
-        <p>
-            {{ form.key_len.label }}<br />
-            {{ form.key_len }}<br />
-            {% for error in form.key_len.errors %}
-            <span style="color: red;">[{{ error }}]</span>
-            {% endfor %}
-        </p>
-        <p>
-            {{ form.cert_len.label }}<br />
-            {{ form.cert_len(size=4) }}<br />
-            {% for error in form.cert_len.errors %}
-            <span style="color: red;">[{{ error }}]</span>
-            {% endfor %}
-        </p>
-        <hr />
-        <h5>Contact Information</h5>
-        <hr />
-        <p>
-            {{ form.country.label }} <sup>(Please use <a href="https://en.wikipedia.org/wiki/ISO_3166-1#Current_codes">ISO 3166-1 codes</a>)</sup><br />
-            {{ form.country(size=4) }}<br />
-            {% for error in form.country.errors %}
-            <span style="color: red;">[{{ error }}]</span>
-            {% endfor %}
-        </p>
-        <p>
-            {{ form.state.label }}<br />
-            {{ form.state(size=32) }}<br />
-            {% for error in form.state.errors %}
-            <span style="color: red;">[{{ error }}]</span>
-            {% endfor %}
-        </p>
-        <p>
-            {{ form.locality.label }}<br />
-            {{ form.locality(size=32) }}<br />
-            {% for error in form.locality.errors %}
-            <span style="color: red;">[{{ error }}]</span>
-            {% endfor %}
-        </p>
-        <p>
-            {{ form.organization.label }}<br />
-            {{ form.organization(size=32) }}<br />
-            {% for error in form.organization.errors %}
-            <span style="color: red;">[{{ error }}]</span>
-            {% endfor %}
-        </p>
-        <p>
-            {{ form.ou_name.label }}<br />
-            {{ form.ou_name(size=32) }}<br />
-            {% for error in form.ou_name.errors %}
-            <span style="color: red;">[{{ error }}]</span>
-            {% endfor %}
-        </p>
-        <hr />
-        <p>{{ form.submit() }}</p>
-    </form>
+    <h3>Create new Intermediate Certificate</h3>
+    <hr />
+    <div class="row">
+        <div class="col">
+        <form action="" method="POST">
+            {{ form.hidden_tag() }}
+            <h5>Certificate Information</h5>
+            <hr />
+            <p>
+                {{ form.common_name.label }}<br />
+                {{ form.common_name(size=32) }}<br />
+                {% for error in form.common_name.errors %}
+                <span style="color: red;">[{{ error }}]</span>
+                {% endfor %}
+            </p>
+            <p>
+                {{ form.ca_cert.label }}<br />
+                {{ form.ca_cert }}<br />
+                {% for error in form.ca_cert.errors %}
+                <span style="color: red;">[{{ error }}]</span>
+                {% endfor %}
+            </p>
+            <p>
+                {{ form.ca_passphrase.label }}<br />
+                {{ form.ca_passphrase(size=48) }}<br />
+                {% for error in form.ca_passphrase.errors %}
+                <span style="color: red;">[{{ error }}]</span>
+                {% endfor %}
+            </p>
+            <p>
+                {{ form.email.label }}<br />
+                {{ form.email(size=64) }}<br />
+                {% for error in form.email.errors %}
+                <span style="color: red;">[{{ error }}]</span>
+                {% endfor %}
+            </p>
+            <p>
+                {{ form.key_len.label }}<br />
+                {{ form.key_len }}<br />
+                {% for error in form.key_len.errors %}
+                <span style="color: red;">[{{ error }}]</span>
+                {% endfor %}
+            </p>
+            <p>
+                {{ form.cert_len.label }}<br />
+                {{ form.cert_len(size=4) }}<br />
+                {% for error in form.cert_len.errors %}
+                <span style="color: red;">[{{ error }}]</span>
+                {% endfor %}
+            </p>
+            <hr />
+            </div>
+            <div class="col">
+            <h5>Contact Information</h5>
+            <hr />
+            <p>
+                {{ form.country.label }} <sup>(Please use <a href="https://en.wikipedia.org/wiki/ISO_3166-1#Current_codes">ISO 3166-1 codes</a>)</sup><br />
+                {{ form.country(size=4) }}<br />
+                {% for error in form.country.errors %}
+                <span style="color: red;">[{{ error }}]</span>
+                {% endfor %}
+            </p>
+            <p>
+                {{ form.state.label }}<br />
+                {{ form.state(size=32) }}<br />
+                {% for error in form.state.errors %}
+                <span style="color: red;">[{{ error }}]</span>
+                {% endfor %}
+            </p>
+            <p>
+                {{ form.locality.label }}<br />
+                {{ form.locality(size=32) }}<br />
+                {% for error in form.locality.errors %}
+                <span style="color: red;">[{{ error }}]</span>
+                {% endfor %}
+            </p>
+            <p>
+                {{ form.organization.label }}<br />
+                {{ form.organization(size=32) }}<br />
+                {% for error in form.organization.errors %}
+                <span style="color: red;">[{{ error }}]</span>
+                {% endfor %}
+            </p>
+            <p>
+                {{ form.ou_name.label }}<br />
+                {{ form.ou_name(size=32) }}<br />
+                {% for error in form.ou_name.errors %}
+                <span style="color: red;">[{{ error }}]</span>
+                {% endfor %}
+            </p>
+            <hr />
+            <p>{{ form.submit() }}</p>
+        </div>
+        </form>
+    </div>
 {% endblock %}

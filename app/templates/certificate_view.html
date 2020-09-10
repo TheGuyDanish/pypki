@@ -25,12 +25,13 @@
         <p><h6>Public Key</h6> <a class="btn btn-sm btn-secondary" href="#" onclick="SelectText('pubkey')">Select All</a></p>
         <pre class="pre-scrollable" id="pubkey">{{ cert.pubkey }}</pre>
     </div>
-    {% if privkey %}
     <div class="col">
+    {% if privkey %}
+        <div class="alert alert-danger"><strong>Save this key!</strong>
+        <p>This private key will only be displayed once. Copy it now to ensure that it does not get lost. If it does, you will not be able to install the certificate in applications that will need it!</p></div>
         <p><h6>Private Key</h6> <a class="btn btn-sm btn-secondary" href="#" onclick="SelectText('privkey')">Select All</a></p>
-        <div class="alert alert-warning"><strong>Copy this string now!</strong> This key will only be shown once. If this is lost, you will not be able to use your certificate.</div>
         <pre class="pre-scrollable" id="privkey">{{ privkey }}</pre>
-    </div>
     {% endif %}
+    </div>
 </div>
 {% endblock %}

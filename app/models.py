@@ -13,6 +13,11 @@ class User(UserMixin, db.Model):
     title = db.Column(db.String(128), index=True)
     password_hash = db.Column(db.String(128))
     isAdmin = db.Column(db.Boolean(), server_default="0")
+    country = db.Column(db.String(2))
+    state = db.Column(db.String(64))
+    locality = db.Column(db.String(64))
+    org_name = db.Column(db.String(128))
+    ou_name = db.Column(db.String(64))
 
     def __repr__(self):
         return '<User {}>'.format(self.username)

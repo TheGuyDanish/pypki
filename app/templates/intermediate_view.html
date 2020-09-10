@@ -3,6 +3,13 @@
 {% block content %}
 <h4>{{ cert.name }}</h4>
 <hr />
+{% if fernet_key %}
+<div class="alert alert-danger">
+    <strong>SAVE THIS KEY</strong>
+    <p>The certificate private key is stored and encoded with the below private key. In order to perform any actions involving the private key (such as creating new certificates), the below passphrase must be input. Please copy this and keep it somewhere safe!</p>
+    <pre>{{ fernet_key }}</pre>
+</div>
+{% endif %}
 <table class="table table-striped table-hover">
     <tr>
         <th>Valid From</th>
@@ -26,8 +33,11 @@
         <pre class="pre-scrollable" id="pubkey">{{ cert.pubkey }}</pre>
     </div>
     <div class="col">
+    {% if privkey %}
         <p><h6>Private Key</h6> <a class="btn btn-sm btn-secondary" href="#" onclick="SelectText('privkey')">Select All</a></p>
-        <pre class="pre-scrollable" id="privkey">{{ cert.privkey }}</pre>
+        <div class="alert alert-danger"><strong>This will only be shown once!</strong> This key will only be shown once. If this is lost, you will not be able to use your certificate.</div>
+        <pre class="pre-scrollable" id="privkey">{{ privkey }}</pre>
+    {% endif %}
     </div>
 </div>
 {% endblock %}

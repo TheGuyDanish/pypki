@@ -1,7 +1,7 @@
 """ Forms used in adventureguide """
 
 from flask_wtf import FlaskForm
-from wtforms import StringField, SubmitField, SelectField
+from wtforms import StringField, SubmitField, SelectField, PasswordField
 from wtforms.fields.html5 import IntegerField
 from wtforms.ext.sqlalchemy.fields import QuerySelectField
 from wtforms.validators import DataRequired, ValidationError, Email, NumberRange, Length
@@ -12,6 +12,11 @@ class EditProfileForm(FlaskForm):
     """ Form to edit a profile """
     email = StringField('Email', validators=[DataRequired(), Email()])
     title = StringField('Title', validators=[DataRequired()])
+    country = StringField('Country')
+    state = StringField('State or Province')
+    locality = StringField('Locality')
+    org_name = StringField('Organization Name')
+    ou_name = StringField('Organizational Unit Name')
     submit = SubmitField('Submit')
 
     def __init__(self, original_email, *args, **kwargs):
@@ -56,6 +61,7 @@ class NewIntermediateCertForm(FlaskForm):
     ca_cert = QuerySelectField('Root CA',
                                query_factory=root_choice_query, allow_blank=False,
                                get_label='name', validators=[DataRequired()])
+    ca_passphrase = PasswordField('CA Encryption Key', validators=[DataRequired()])
     submit = SubmitField('Submit')
 
 class NewCertForm(FlaskForm):
@@ -74,4 +80,5 @@ class NewCertForm(FlaskForm):
     int_cert = QuerySelectField('Intermediate Certificate',
                                 query_factory=intermediate_choice_query, allow_blank=False,
                                 get_label='name', validators=[DataRequired()])
+    int_passphrase = PasswordField('Intermediate Encryption Key', validators=[DataRequired()])
     submit = SubmitField('Submit')

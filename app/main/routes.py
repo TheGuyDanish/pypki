@@ -1,5 +1,6 @@
 """ The main logic and routes for servervault """
 from datetime import datetime
+from cryptography.fernet import Fernet
 from flask import render_template, flash, redirect, url_for, request, current_app, session, Response
 from flask_login import current_user, login_user, logout_user, login_required
 from OpenSSL import crypto
@@ -11,6 +12,7 @@ from app.certgen import createCertificate, createKeyPair, createCertRequest, TYP
 from app.main import bp
 from app.main.forms import EditProfileForm, NewRootCertForm, NewIntermediateCertForm, NewCertForm
 from app.models import User, RootCertificate, IntermediateCertificate, Certificate
+from app.utility import has_extension
 
 #region Jinja Filters
 @bp.context_processor
@@ -24,7 +26,7 @@ def asn1_to_datetime(timestamp):
     else:
         timestamp = str(timestamp)
 
-    time_object = datetime.strptime(timestamp, '%Y%m%d%H%M%S%z')
+    time_object = datetime.strptime(timestamp, current_app.config['ASN1_TIME_FORMAT'])
     return time_object.isoformat()
 
 #endregion
@@ -45,12 +47,22 @@ def edit_profile():
     if form.validate_on_submit():
         current_user.email = form.email.data
         current_user.title = form.title.data
+        current_user.country = form.country.data
+        current_user.state = form.state.data
+        current_user.locality = form.locality.data
+        current_user.org_name = form.org_name.data
+        current_user.ou_name = form.ou_name.data
         db.session.commit()
         flash('Your changes have been saved.')
         return redirect(url_for('main.user', username=current_user.username))
     elif request.method == 'GET':
         form.email.data = current_user.email
         form.title.data = current_user.title
+        form.country.data = current_user.country
+        form.state.data = current_user.state
+        form.locality.data = current_user.locality
+        form.org_name.data = current_user.org_name
+        form.ou_name.data = current_user.ou_name
     return render_template('edit_profile.html', title='Edit Profile',
                            form=form)
 
@@ -72,6 +84,12 @@ def root_list():
 @login_required
 def root_new():
     form = NewRootCertForm()
+    if request.method == 'GET':
+        form.country.data = current_user.country
+        form.state.data = current_user.state
+        form.locality.data = current_user.locality
+        form.organization.data = current_user.org_name
+        form.ou_name.data = current_user.ou_name
     if form.validate_on_submit():
         ca_key = createKeyPair(TYPE_RSA, int(form.key_len.data))
         ca_req = createCertRequest(ca_key, CN=form.common_name.data, ST=form.state.data,
@@ -94,11 +112,18 @@ def root_new():
         ca_cert.sign(ca_key, "sha256")
 
         pubkey = crypto.dump_certificate(crypto.FILETYPE_PEM, ca_cert).decode("UTF-8")
-        privkey = crypto.dump_privatekey(crypto.FILETYPE_PEM, ca_key).decode("UTF-8")
+        privkey = crypto.dump_privatekey(crypto.FILETYPE_PEM, ca_key)
+
+        fernet_key = Fernet.generate_key()
+        fernet_session = Fernet(fernet_key)
+        encrypted_privkey = fernet_session.encrypt(privkey)
+
         final_cert = RootCertificate(name=form.common_name.data,
-                                     pubkey=pubkey, privkey=privkey)
+                                     pubkey=pubkey, privkey=encrypted_privkey)
         db.session.add(final_cert)
         db.session.commit()
+
+        session[f'fernet_root_{final_cert.id}'] = fernet_key.decode("UTF-8")
         flash(f"Created new certificate '{form.common_name.data}'")
         return redirect(url_for('main.root_view', cert_id=final_cert.id))
     return render_template('root_new.html', form=form)
@@ -106,9 +131,15 @@ def root_new():
 @bp.route('/root/<cert_id>')
 @login_required
 def root_view(cert_id):
+    if session.get(f'fernet_root_{cert_id}'):
+        fernet_key = session[f'fernet_root_{cert_id}']
+        session[f'fernet_root_{cert_id}'] = None
+    else:
+        fernet_key = None
+
     cert = RootCertificate.query.filter_by(id=cert_id).first_or_404()
     cert_x509 = crypto.load_certificate(crypto.FILETYPE_PEM, cert.pubkey)
-    return render_template('root_view.html', cert=cert, x509=cert_x509)
+    return render_template('root_view.html', cert=cert, x509=cert_x509, fernet_key=fernet_key)
 
 @bp.route('/enroll/r/<cert_id>')
 def enroll_root(cert_id):
@@ -130,10 +161,18 @@ def intermediate_list():
 @login_required
 def intermediate_new():
     form = NewIntermediateCertForm()
+    if request.method == 'GET':
+        form.country.data = current_user.country
+        form.state.data = current_user.state
+        form.locality.data = current_user.locality
+        form.organization.data = current_user.org_name
+        form.ou_name.data = current_user.ou_name
     if form.validate_on_submit():
         ca_record = form.ca_cert.data
         ca_cert = crypto.load_certificate(crypto.FILETYPE_PEM, ca_record.pubkey)
-        ca_key = crypto.load_privatekey(crypto.FILETYPE_PEM, ca_record.privkey)
+        fernet = Fernet(form.ca_passphrase.data)
+        ca_privkey = fernet.decrypt(ca_record.privkey.encode())
+        ca_key = crypto.load_privatekey(crypto.FILETYPE_PEM, ca_privkey)
         int_key = createKeyPair(TYPE_RSA, int(form.key_len.data))
         int_req = createCertRequest(int_key, CN=form.common_name.data, ST=form.state.data,
                                    L=form.locality.data, O=form.organization.data,
@@ -150,9 +189,11 @@ def intermediate_new():
         int_cert.add_extensions([
             crypto.X509Extension(b'subjectKeyIdentifier', False, b'hash', subject=int_cert),
         ])
-        int_cert.add_extensions([
-            crypto.X509Extension(b'authorityKeyIdentifier', False, b'keyid:always', issuer=ca_cert),
-        ])
+        if has_extension(ca_cert, 'subjectKeyIdentifier'):
+            int_cert.add_extensions([
+                crypto.X509Extension(b'authorityKeyIdentifier', False, b'keyid:always',
+                                     issuer=ca_cert),
+            ])
         int_cert.add_extensions([
             crypto.X509Extension(b'keyUsage', True, b'Certificate Sign, CRL Sign'),
             crypto.X509Extension(b'basicConstraints', True, b'CA:TRUE, pathlen:0'),
@@ -160,22 +201,35 @@ def intermediate_new():
         int_cert.sign(ca_key, "sha256")
 
         pubkey = crypto.dump_certificate(crypto.FILETYPE_PEM, int_cert).decode("UTF-8")
-        privkey = crypto.dump_privatekey(crypto.FILETYPE_PEM, int_key).decode("UTF-8")
+        privkey = crypto.dump_privatekey(crypto.FILETYPE_PEM, int_key)
+
+        fernet_key = Fernet.generate_key()
+        fernet_session = Fernet(fernet_key)
+        encrypted_privkey = fernet_session.encrypt(privkey)
+
         final_cert = IntermediateCertificate(name=form.common_name.data,
-                                             pubkey=pubkey, privkey=privkey,
+                                             pubkey=pubkey, privkey=encrypted_privkey,
                                              root=ca_record.id)
         db.session.add(final_cert)
         db.session.commit()
         flash(f"Created new certificate '{form.common_name.data}'")
+        session[f'fernet_intermediate_{final_cert.id}'] = fernet_key.decode("UTF-8")
         return redirect(url_for('main.intermediate_view', cert_id=final_cert.id))
     return render_template('intermediate_new.html', form=form)
 
 @bp.route('/intermediate/<cert_id>')
 @login_required
 def intermediate_view(cert_id):
+    if session.get(f'fernet_intermediate_{cert_id}'):
+        fernet_key = session[f'fernet_intermediate_{cert_id}']
+        session[f'fernet_intermediate_{cert_id}'] = None
+    else:
+        fernet_key = None
+
     cert = IntermediateCertificate.query.filter_by(id=cert_id).first_or_404()
     cert_x509 = crypto.load_certificate(crypto.FILETYPE_PEM, cert.pubkey)
-    return render_template('intermediate_view.html', cert=cert, x509=cert_x509)
+    return render_template('intermediate_view.html', cert=cert, x509=cert_x509,
+                           fernet_key=fernet_key)
 
 #endregion
 
@@ -190,10 +244,18 @@ def certificate_list():
 @login_required
 def certificate_new():
     form = NewCertForm()
+    if request.method == 'GET':
+        form.country.data = current_user.country
+        form.state.data = current_user.state
+        form.locality.data = current_user.locality
+        form.organization.data = current_user.org_name
+        form.ou_name.data = current_user.ou_name
     if form.validate_on_submit():
         int_record = form.int_cert.data
         int_cert = crypto.load_certificate(crypto.FILETYPE_PEM, int_record.pubkey)
-        int_key = crypto.load_privatekey(crypto.FILETYPE_PEM, int_record.privkey)
+        fernet = Fernet(form.int_passphrase.data)
+        int_privkey = fernet.decrypt(int_record.privkey.encode())
+        int_key = crypto.load_privatekey(crypto.FILETYPE_PEM, int_privkey)
         cert_key = createKeyPair(TYPE_RSA, int(form.key_len.data))
         cert_req = createCertRequest(cert_key, CN=form.common_name.data, ST=form.state.data,
                                    L=form.locality.data, O=form.organization.data,
@@ -222,8 +284,7 @@ def certificate_new():
         pubkey = crypto.dump_certificate(crypto.FILETYPE_PEM, cert).decode("UTF-8")
         privkey = crypto.dump_privatekey(crypto.FILETYPE_PEM, cert_key).decode("UTF-8")
         final_cert = Certificate(name=form.common_name.data,
-                                 pubkey=pubkey, privkey=privkey,
-                                 intermediate=int_record.id)
+                                 pubkey=pubkey, intermediate=int_record.id)
         db.session.add(final_cert)
         db.session.commit()
         session[f'privkey_{final_cert.id}'] = privkey
@@ -239,6 +300,7 @@ def certificate_view(cert_id, **extra):
         session[f'privkey_{cert_id}'] = None
     else:
         privkey = None
+
     cert = Certificate.query.filter_by(id=cert_id).first_or_404()
     cert_x509 = crypto.load_certificate(crypto.FILETYPE_PEM, cert.pubkey)
     return render_template('certificate_view.html', cert=cert, x509=cert_x509, privkey=privkey)
