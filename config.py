@@ -4,7 +4,7 @@ import os
 class Config(object):
     """ Configuration items for the application """
     # App related settings
-    TITLE = 'Flask Template'
+    TITLE = 'pypki'
     SECRET_KEY = os.environ.get('SECRET_KEY') or 'you-will-never-guess'
 
     # Database settings

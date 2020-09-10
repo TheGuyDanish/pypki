@@ -1,5 +1,6 @@
 """
 Certificate generation module.
+Copyright (C) Martin Sjögren and AB Strakt 2001, All rights reserved
 """
 
 from OpenSSL import crypto
