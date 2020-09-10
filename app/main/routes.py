@@ -1,17 +1,15 @@
 """ The main logic and routes for servervault """
 from datetime import datetime
+from random import randint
 from cryptography.fernet import Fernet
 from flask import render_template, flash, redirect, url_for, request, current_app, session, Response
-from flask_login import current_user, login_user, logout_user, login_required
+from flask_login import current_user, login_required
 from OpenSSL import crypto
-from random import randint
-from sqlalchemy import desc
-from werkzeug.urls import url_parse
 from app import db
-from app.certgen import createCertificate, createKeyPair, createCertRequest, TYPE_RSA
+from app.certgen import createKeyPair, createCertRequest, TYPE_RSA
 from app.main import bp
 from app.main.forms import EditProfileForm, NewRootCertForm, NewIntermediateCertForm, NewCertForm
-from app.models import User, RootCertificate, IntermediateCertificate, Certificate
+from app.models import RootCertificate, IntermediateCertificate, Certificate
 from app.utility import has_extension
 
 #region Jinja Filters
@@ -21,7 +19,7 @@ def inject_version():
 
 @bp.app_template_filter('asn1_to_datetime')
 def asn1_to_datetime(timestamp):
-    if type(timestamp) == bytes:
+    if isinstance(timestamp, bytes):
         timestamp = timestamp.decode("UTF-8")
     else:
         timestamp = str(timestamp)
@@ -66,11 +64,10 @@ def edit_profile():
     return render_template('edit_profile.html', title='Edit Profile',
                            form=form)
 
-@bp.route('/user/<username>')
+@bp.route('/user')
 @login_required
-def user(username):
-    user = User.query.filter_by(username=username).first_or_404()
-    return render_template('user.html', user=user)
+def user():
+    return render_template('user.html', user=current_user)
 #endregion
 
 #region Root Certificates
@@ -294,7 +291,7 @@ def certificate_new():
 
 @bp.route('/certificate/<cert_id>')
 @login_required
-def certificate_view(cert_id, **extra):
+def certificate_view(cert_id):
     if session.get(f'privkey_{cert_id}'):
         privkey = session[f'privkey_{cert_id}']
         session[f'privkey_{cert_id}'] = None
