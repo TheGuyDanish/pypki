@@ -1,0 +1,56 @@
+{% extends "base.html" %}
+
+{% block content %}
+<h4>{{ cert.name }}</h4>
+<hr />
+<table class="table table-striped table-hover">
+    <tr>
+        <th>Valid From</th>
+        <th>Valid Until</th>
+        <th>Expired?</th>
+        <th>Serial Number</th>
+    </tr>
+    <tr>
+        <td>{{ x509.get_notBefore()|asn1_to_datetime }}</td>
+        <td>{{ x509.get_notAfter()|asn1_to_datetime }}</td>
+        <td>{{ x509.has_expired() }}</td>
+        <td>{{ x509.get_serial_number() }}</td>
+    </tr>
+</table>
+<div id="accordion">
+    <div class="card">
+        <div class="card-header" id="children-heading">
+            <h5 class="mb-0">
+                <button class="btn btn-link" data-toggle="collapse" data-target="#children-collapse" aria-expanded="true" aria-controls="children-collapse">
+                    Intermediate Certificates
+                </button>
+            </h5>
+        </div>
+    </div>
+    <div id="children-collapse" class="collapse" aria-labelledby="children-heading" data-parent="#accordion">
+        <div class="card-body">
+            <table class="table table-striped table-hover">
+                <tr>
+                    <th>Name</th>
+                </tr>
+                {% for child in cert.children %}
+                <tr>
+                    <td><a href="{{ url_for('main.intermediate_view', cert_id=child.id) }}" target="_blank">{{ child.name }}</a></td>
+                </tr>
+                {% endfor %}
+            </table>
+        </div>
+    </div>
+</div>
+<hr />
+<div class="row">
+    <div class="col">
+        <p><h6>Public Key</h6> <a class="btn btn-sm btn-secondary" href="#" onclick="SelectText('pubkey')">Select All</a> <a class="btn btn-sm btn-secondary" href="#">Download .CER (X.509)</a></p>
+        <pre class="pre-scrollable" id="pubkey">{{ cert.pubkey }}</pre>
+    </div>
+    <div class="col">
+        <p><h6>Private Key</h6> <a class="btn btn-sm btn-secondary" href="#" onclick="SelectText('privkey')">Select All</a></p>
+        <pre class="pre-scrollable" id="privkey">{{ cert.privkey }}</pre>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,36 @@
+{% extends "base.html" %}
+
+{% block content %}
+<h4>{{ cert.name }}</h4>
+<hr />
+<table class="table table-striped table-hover">
+    <tr>
+        <th>Valid From</th>
+        <th>Valid Until</th>
+        <th>Expired?</th>
+        <th>Serial Number</th>
+        <th>Issuer</th>
+    </tr>
+    <tr>
+        <td>{{ x509.get_notBefore()|asn1_to_datetime }}</td>
+        <td>{{ x509.get_notAfter()|asn1_to_datetime }}</td>
+        <td>{{ x509.has_expired() }}</td>
+        <td>{{ x509.get_serial_number() }}</td>
+        <td><a href="{{ url_for('main.intermediate_view', cert_id=cert.issuer.id) }}">{{ cert.issuer.name }}</a></td>
+    </tr>
+</table>
+<hr />
+<div class="row">
+    <div class="col">
+        <p><h6>Public Key</h6> <a class="btn btn-sm btn-secondary" href="#" onclick="SelectText('pubkey')">Select All</a></p>
+        <pre class="pre-scrollable" id="pubkey">{{ cert.pubkey }}</pre>
+    </div>
+    {% if privkey %}
+    <div class="col">
+        <p><h6>Private Key</h6> <a class="btn btn-sm btn-secondary" href="#" onclick="SelectText('privkey')">Select All</a></p>
+        <div class="alert alert-warning"><strong>Copy this string now!</strong> This key will only be shown once. If this is lost, you will not be able to use your certificate.</div>
+        <pre class="pre-scrollable" id="privkey">{{ privkey }}</pre>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

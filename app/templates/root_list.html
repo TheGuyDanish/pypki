@@ -1,0 +1,24 @@
+{% extends "base.html" %}
+
+{% block content %}
+<h4>Root CA Certificates</h4>
+<a href="{{ url_for('main.root_new') }}">Create new Root CA</a>
+<table class="table table-hover table-striped">
+    <thead>
+        <tr>
+            <th style="width:11%">ID</th>
+            <th>Name</th>
+            <th>buttons</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for cert in certs %}
+        <tr>
+            <td>{{ cert.id }}</td>
+            <td><a href="{{ url_for('main.root_view', cert_id=cert.id) }}">{{ cert.name }}</a></td>
+            <td>links</td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+{% endblock %}

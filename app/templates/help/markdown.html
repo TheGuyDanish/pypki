@@ -1,0 +1,142 @@
+{% extends "base.html" %}
+
+{% block content %}
+{% filter markdown %}
+
+### Headers:
+# h1
+## h2
+### h3
+#### h4
+##### h5
+###### h6
+
+
+`# h1`
+
+`## h2`
+
+`### h3`
+
+`#### h4`
+
+`##### h5`
+
+`###### h6`
+{% endfilter %}
+<hr />
+{% filter markdown %}
+
+### Italic
+*Test*
+
+`*Test*`
+{% endfilter %}
+<hr />
+{% filter markdown %}
+### Bold
+**Test**
+
+`**Test**`
+{% endfilter %}
+<hr />
+{% filter markdown %}
+
+### Hyperlinks
+[Text](URL)
+
+`[Text](URL)`
+{% endfilter %}
+<hr />
+{% filter markdown %}
+### Image Link
+![alt text](https://placekitten.com/300/300 "Placekitten")
+
+`![alt text](https://placekitten.com/300/300 "Placekitten")`
+Note: The second argument (the text), is optional.
+
+{% endfilter %}
+<hr />
+{% filter markdown %}
+### Unordered List
+
+- One
+- Two
+- Three
+    - Subitem
+
+```
+- One
+- Two
+- Three
+    - Subitem
+```
+{% endfilter %}
+<hr />
+{% filter markdown %}
+### Ordered List:
+
+1. One
+2. Two
+3. Three
+
+```
+1. One
+2. Two
+3. Three
+```
+{% endfilter %}
+<hr />
+{% filter markdown %}
+### Code:
+`test()`
+
+{% endfilter %}
+<p><code>`test()`</code></p>
+<hr />
+{% filter markdown %}
+### Multi-line code
+```
+def hello_world():
+    print('Hello world!')
+```
+{% endfilter %}
+<pre><code>
+```
+def hello_world():
+    print('Hello world!')
+```
+</code></pre>
+<hr />
+{% filter markdown %}
+
+### Table of Contents
+[TOC]
+
+`[TOC]`
+{% endfilter %}
+<hr />
+{% filter markdown %}
+
+### Tables
+First Header  | Second Header
+------------- | -------------
+Content Cell  | Content Cell
+Content Cell  | Content Cell
+
+```
+First Header  | Second Header
+------------- | -------------
+Content Cell  | Content Cell
+Content Cell  | Content Cell
+```
+
+{% endfilter %}
+<hr />
+{% filter markdown %}
+### Footnotes
+This is text.[^1]
+
+[^1]: This is a footnote.
+{% endfilter %}
+{% endblock %}
