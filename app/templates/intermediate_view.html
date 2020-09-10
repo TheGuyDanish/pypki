@@ -22,7 +22,7 @@
 <hr />
 <div class="row">
     <div class="col">
-        <p><h6>Public Key</h6> <a class="btn btn-sm btn-secondary" href="#" onclick="SelectText('pubkey')">Select All</a></p>
+        <p><h6>Public Key</h6> <a class="btn btn-sm btn-secondary" href="#" onclick="SelectText('pubkey')">Select All</a> <a class="btn btn-sm btn-secondary" href="{{ url_for('main.enroll_intermediate', cert_id=cert.id) }}">Download .CER (X.509)</a></p>
         <pre class="pre-scrollable" id="pubkey">{{ cert.pubkey }}</pre>
     </div>
     <div class="col">
