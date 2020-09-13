@@ -1,0 +1,22 @@
+{% extends "base.html" %}
+
+{% block content %}
+    <h3>Complete Certificate Request</h3>
+    <hr />
+    <div class="row">
+        <div class="col">
+        <form action="" method="POST">
+            {{ form.hidden_tag() }}
+            <p>
+                {{ form.csr.label }}<br />
+                {{ form.csr(rows=20, cols=100) }}<br />
+                {% for error in form.csr.errors %}
+                <span style="color: red;">[{{ error }}]</span>
+                {% endfor %}
+            </p>
+            <hr />
+            <p>{{ form.submit() }}</p>
+        </div>
+        </form>
+    </div>
+{% endblock %}

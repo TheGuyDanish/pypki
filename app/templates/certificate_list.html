@@ -2,7 +2,7 @@
 
 {% block content %}
 <h4>End User Certificates</h4>
-<a href="{{ url_for('main.certificate_new') }}">Create new Certificate</a>
+<a href="{{ url_for('main.certificate_new') }}" class="btn btn-secondary btn-sm">Create new Certificate</a> <a href="{{ url_for('main.certificate_new_csr') }}" class="btn btn-secondary btn-sm">Complete Certificate Request</a>
 <table class="table table-hover table-striped">
     <thead>
         <tr>

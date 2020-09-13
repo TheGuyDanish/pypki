@@ -1,10 +1,12 @@
 """ Forms used in adventureguide """
 
 from flask_wtf import FlaskForm
-from wtforms import StringField, SubmitField, SelectField, PasswordField
+from wtforms import StringField, SubmitField, SelectField, PasswordField, TextAreaField,\
+                    HiddenField
 from wtforms.fields.html5 import IntegerField
 from wtforms.ext.sqlalchemy.fields import QuerySelectField
-from wtforms.validators import DataRequired, ValidationError, Email, NumberRange, Length
+from wtforms.validators import DataRequired, ValidationError, Email, NumberRange, Length,\
+                               Optional
 from app.models import User
 from app.queries import root_choice_query, intermediate_choice_query
 
@@ -75,10 +77,16 @@ class NewCertForm(FlaskForm):
     email = StringField('Email Address', validators=[DataRequired()])
     key_len = SelectField('Private Key Length',
                           choices=[('1024', '1024'), ('2048', '2048'), ('4096', '4096')],
-                          validators=[DataRequired()])
+                          validators=[Optional()])
     cert_len = IntegerField('Certificate Expiry (years)', validators=[NumberRange(min=1, max=99)])
     int_cert = QuerySelectField('Intermediate Certificate',
                                 query_factory=intermediate_choice_query, allow_blank=False,
                                 get_label='name', validators=[DataRequired()])
     int_passphrase = PasswordField('Intermediate Encryption Key', validators=[DataRequired()])
+    csr = HiddenField('CSR', validators=[Optional()])
+    submit = SubmitField('Submit')
+
+class NewCSRFulfillmentForm(FlaskForm):
+    """ Form to take a certificate request (CSR) """
+    csr = TextAreaField('CSR', validators=[DataRequired()])
     submit = SubmitField('Submit')

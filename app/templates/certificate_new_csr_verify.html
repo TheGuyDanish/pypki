@@ -1,0 +1,72 @@
+{% extends "base.html" %}
+
+{% block content %}
+    <h3>Complete Certificate Request</h3>
+    <form action="{{ url_for('main.certificate_new') }}" method="POST">
+        {{ form.hidden_tag() }}
+        {{ form.csr() }}
+        <table class="table">
+            <tr>
+                <th>Key Information</th>
+                <td></td>
+            </tr>
+            <tr>
+                <td>Key Size</td>
+                <td>{{ key.bits() }}</td>
+            </tr>
+            <tr>
+                <td>Key Algorithm</td>
+                <td>{{ key_type }}</td>
+            </tr>
+            <tr>
+                <th>Components</th>
+                <td></td>
+            </tr>
+            <tr>
+                <td>{{ form.common_name.label }}</td>
+                <td>{{ form.common_name(size=32) }}</td>
+            </tr>
+            <tr>
+                <td>{{ form.email.label }}</td>
+                <td>{{ form.email(size=32) }}</td>
+            </tr>
+            <tr>
+                <td>{{ form.country.label }}</td>
+                <td>{{ form.country(size=1) }}</td>
+            </tr>
+            <tr>
+                <td>{{ form.state.label }}</td>
+                <td>{{ form.state(size=32) }}</td>
+            </tr>
+            <tr>
+                <td>{{ form.locality.label }}</td>
+                <td>{{ form.locality(size=32) }}</td>
+            </tr>
+            <tr>
+                <td>{{ form.organization.label }}</td>
+                <td>{{ form.organization(size=32) }}</td>
+            </tr>
+            <tr>
+                <td>{{ form.ou_name.label }}</td>
+                <td>{{ form.ou_name(size=32) }}</td>
+            </tr>
+            <tr>
+                <th>Signing Information</th>
+                <td></td>
+            </tr>
+            <tr>
+                <td>{{ form.int_cert.label }}</td>
+                <td>{{ form.int_cert }}</td>
+            </tr>
+            <tr>
+                <td>{{ form.int_passphrase.label }}</td>
+                <td>{{ form.int_passphrase(size=48) }}</td>
+            </tr>
+            <tr>
+                <td>{{ form.cert_len.label }}</td>
+                <td>{{ form.cert_len(size=1) }}</td>
+            </tr>
+        </table>
+        {{ form.submit() }}
+    </form>
+{% endblock %}
