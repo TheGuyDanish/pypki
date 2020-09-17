@@ -3,7 +3,6 @@ from hashlib import md5
 from flask_login import UserMixin
 from werkzeug.security import generate_password_hash, check_password_hash
 from app import db, login
-from datetime import datetime
 
 class User(UserMixin, db.Model):
     """ Database model for users """
@@ -55,6 +54,7 @@ class IntermediateCertificate(db.Model):
     name = db.Column(db.String(255), index=True)
     pubkey = db.Column(db.Text)
     privkey = db.Column(db.Text)
+    serial = db.Column(db.Integer)
     root = db.Column(db.Integer, db.ForeignKey('root_certificate.id'))
     children = db.relationship('Certificate', backref='issuer', lazy='dynamic')
 
@@ -64,4 +64,5 @@ class Certificate(db.Model):
     name = db.Column(db.String(255), index=True)
     pubkey = db.Column(db.Text)
     privkey = db.Column(db.Text)
+    serial = db.Column(db.Integer)
     intermediate = db.Column(db.Integer, db.ForeignKey('intermediate_certificate.id'))
