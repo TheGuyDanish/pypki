@@ -6,11 +6,11 @@ pypki was developed as a hobby project with small labs and networks in mind, thi
 ### Features
 - Generate and store root and intermediate certificates
 - Create and sign new certificates
+- Encrypted private keys, unlockable via passphrase for signing operations
+- Accept and sign X.509 CSR requests
 
 #### In Progress:
 - [View the issue tracker for the most up-to-date progress on new features](https://github.com/TheGuyDanish/pypki/issues?q=is%3Aissue+is%3Aopen)
-- Encrypted private keys, unlockable via passphrase for signing operations
-- Accept and sign X.509 CSR requests
 
 ### Development
 pypki is being actively developed on Python 3.7.3. It uses f-strings and is therefore incompatible with Python versions prior to 3.6. Keep this in mind when setting up your dev environment.
